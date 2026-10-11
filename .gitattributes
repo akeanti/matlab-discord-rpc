@@ -1,0 +1,9 @@
+* text=auto
+*.m   text diff=matlab linguist-language=MATLAB
+*.cs  text
+*.sh  text eol=lf
+*.png binary
+*.svg text
+
+tests/** linguist-vendored=false
+docs/** linguist-documentation

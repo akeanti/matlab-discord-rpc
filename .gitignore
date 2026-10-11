@@ -1,0 +1,16 @@
+# built on first run by drpc.m
+DiscordRPC/bin/
+
+# your personal settings, created on first run
+DiscordRPC/config.json
+
+# MATLAB
+*.asv
+*.m~
+slprj/
+
+# editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
