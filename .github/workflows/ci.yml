@@ -10,8 +10,26 @@ permissions:
   contents: read
 
 jobs:
+  matlab-tests:
+    name: MATLAB tests (${{ matrix.release }})
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # the oldest release drpc supports, and the newest one
+        release: [R2021a, latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: matlab-actions/setup-matlab@v2
+        with:
+          release: ${{ matrix.release }}
+      - uses: matlab-actions/run-command@v2
+        with:
+          command: addpath('DiscordRPC'); results = runtests('tests'); disp(table(results)); assertSuccess(results);
+
   bridge-tests:
-    name: Bridge tests (fake Discord)
+    name: Bridge tests (mono, C# 5)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -23,16 +41,15 @@ jobs:
       - name: Run tests
         run: bash tests/run.sh
 
-  windows-compile:
-    name: Compile with the csc.exe that ships with Windows
+  windows:
+    name: Bridge tests with the csc.exe that ships with Windows
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Build DrpcBridge.cs like drpc.m does
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build like drpc.m does, then test against a fake Discord
         shell: pwsh
-        run: |
-          $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-          & $csc /nologo /target:library /optimize+ /r:System.Core.dll /out:DrpcBridge.dll DiscordRPC\DrpcBridge.cs
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Get-Item DrpcBridge.dll | Select-Object Name, Length
+        run: ./tests/run.ps1
