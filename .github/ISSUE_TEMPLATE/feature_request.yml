@@ -1,0 +1,15 @@
+name: Idea
+description: Something drpc should show or do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What should Discord show?
+      description: Describe the situation in MATLAB and what you'd like on your profile.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it would be nice

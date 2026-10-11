@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Troubleshooting guide
+    url: https://github.com/akeanti/matlab-discord-rpc/blob/main/docs/troubleshooting.md
+    about: Most "nothing shows up" problems are covered here.
