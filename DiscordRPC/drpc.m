@@ -1,4 +1,4 @@
-function drpc(cmd, varargin)
+function varargout = drpc(cmd, varargin)
 %DRPC  Discord Rich Presence for MATLAB.
 %
 %   drpc              status and quick actions
@@ -11,8 +11,9 @@ function drpc(cmd, varargin)
 %   drpc config       open config.json (changes apply within 2 s)
 %   drpc preview      show the exact payload and live diagnostics
 %   drpc setup        start it with MATLAB (adds a block to startup.m)
-%   drpc update       install the latest version from GitHub
+%   drpc update       install the newest release from GitHub
 %   drpc uninstall    stop it and remove it from startup.m
+%   drpc docs         open the documentation
 %   drpc version      print the version
 %
 %   What Discord shows
@@ -44,7 +45,7 @@ function drpc(cmd, varargin)
 %   the compiler built into Windows and talks to Discord from a background
 %   thread, so MATLAB never waits on Discord.
 %
-%   https://github.com/akeanti/matlab-discord-rpc
+%   Docs: https://akeanti.xyz/matlab-discord-rpc/
 
     if nargin < 1 || isempty(cmd)
         cmd = 'status';
@@ -57,13 +58,18 @@ function drpc(cmd, varargin)
         case 'pause',     setPaused(true);
         case 'resume',    setPaused(false);
         case 'names',     setNames(varargin);
-        case 'config',    edit(fullfile(rootDir(), 'config.json'));
+        case 'config',    openConfig();
         case 'preview',   preview();
         case 'status',    showStatus();
         case 'setup',     setupStartup(true);
         case 'uninstall', uninstall();
         case 'update',    updateRpc();
+        case 'docs',      web(SITE(), '-browser');
         case 'version',   fprintf('drpc %s\n', VERSION());
+        case '__test__'   % lets tests/DrpcTest.m call the local functions below
+            fns = localfunctions;
+            f = fns{strcmp(cellfun(@func2str, fns, 'UniformOutput', false), varargin{1})};
+            [varargout{1:nargout}] = f(varargin{2:end});
         otherwise
             error('drpc:command', 'Unknown command "%s". Type <a href="matlab:help drpc">help drpc</a>.', char(cmd));
     end
@@ -73,11 +79,15 @@ end
 % lifecycle
 
 function v = VERSION()
-    v = '1.0.0';
+    v = '1.1.0';
 end
 
 function u = REPO()
     u = 'https://github.com/akeanti/matlab-discord-rpc';
+end
+
+function u = SITE()
+    u = 'https://akeanti.xyz/matlab-discord-rpc/';
 end
 
 function r = rootDir()
@@ -86,17 +96,62 @@ end
 
 function autoStart()
     killTimer('DiscordRPC_boot');
-    t = timer('Name', 'DiscordRPC_boot', 'StartDelay', 6, 'ExecutionMode', 'singleShot', ...
-        'ObjectVisibility', 'off', 'TimerFcn', @(~, ~) bootStart(), ...
+    if ~mayAutoStart()
+        return
+    end
+    scheduleBoot(6, 1);
+end
+
+function scheduleBoot(delay, attempt)
+    t = timer('Name', 'DiscordRPC_boot', 'StartDelay', delay, 'ExecutionMode', 'singleShot', ...
+        'ObjectVisibility', 'off', 'TimerFcn', @(~, ~) bootStart(attempt), ...
         'StopFcn', @(tm, ~) delete(tm));
     start(t);
 end
 
-function bootStart()
+function bootStart(attempt)
+    if ~isempty(timerfindall('Name', 'DiscordRPC'))
+        return      % already started by hand
+    end
+    if ~hasDesktop()
+        % -nodesktop or a MATLAB Engine session: nothing to show. The new
+        % desktop (R2025a+) can take a while to come up, so look again.
+        if attempt < 6
+            scheduleBoot(10, attempt + 1);
+        end
+        return
+    end
     try
         startRpc(true);
     catch err
         warning('drpc:start', 'Discord RPC did not start: %s', err.message);
+    end
+end
+
+function tf = mayAutoStart()
+    % startup.m also runs in -batch jobs, compiled apps and parallel pool
+    % workers. None of those is you sitting at MATLAB.
+    tf = true;
+    try
+        tf = ~(isdeployed || batchStartupOptionUsed);
+    catch
+    end
+    if ~isempty(getenv('PARALLEL_SERVER_DECODE_FUNCTION'))
+        tf = false;
+    end
+end
+
+function tf = hasDesktop()
+    tf = false;
+    try
+        tf = usejava('desktop');
+    catch
+    end
+    if ~tf
+        try
+            tf = logical(desktop('-inuse'));   % the new desktop in R2025a+
+        catch
+        end
     end
 end
 
@@ -162,10 +217,9 @@ function setNames(args)
     else
         on = any(strcmpi(args{1}, {'on', 'show', 'true', '1'}));
     end
+    setConfigValue(S.root, 'show_names', on);
     S.cfg.show_names = on;
-    writeConfig(S.root, S.cfg);
-    d = dir(fullfile(S.root, 'config.json'));
-    S.cfgStamp = d.datenum;
+    S.cfgStamp = fileStamp(fullfile(S.root, 'config.json'));
     setappdata(groot, 'drpc_state', S);
     tick();
     if on
@@ -189,6 +243,14 @@ function setupStartup(verbose)
     if isfile(f)
         txt = fileread(f);
     end
+    writeText(f, withStartupBlock(txt));
+    if verbose
+        fprintf('Discord RPC will start with MATLAB (%s).\n', f);
+    end
+end
+
+function txt = withStartupBlock(txt)
+    % startup.m text with exactly one drpc block at the end
     txt = regexprep(removeStartupBlock(txt), '\s+$', '');
     if ~isempty(txt)
         txt = [txt newline newline];
@@ -203,10 +265,7 @@ function setupStartup(verbose)
         'end', ...
         'clear drpcErr', ...
         startupMarks(2)}, newline);
-    writeText(f, [txt block newline]);
-    if verbose
-        fprintf('Discord RPC will start with MATLAB (%s).\n', f);
-    end
+    txt = [txt block newline];
 end
 
 function uninstall()
@@ -229,11 +288,57 @@ function uninstall()
 end
 
 function updateRpc()
+    tag = latestRelease();
+    if isempty(tag)
+        fprintf('Could not ask GitHub for the newest release. Installing the latest code from main...\n');
+        zipUrl = [REPO() '/archive/refs/heads/main.zip'];
+    else
+        latest = regexprep(tag, '^v', '');
+        if ~isNewer(latest, VERSION())
+            fprintf('drpc %s is the newest version.\n', VERSION());
+            return
+        end
+        fprintf('Updating drpc %s to %s...\n', VERSION(), latest);
+        zipUrl = sprintf('%s/archive/refs/tags/%s.zip', REPO(), tag);
+    end
     tmp = tempname;
     mkdir(tmp);
-    fprintf('Downloading the latest drpc...\n');
-    unzip([REPO() '/archive/refs/heads/main.zip'], tmp);
-    run(fullfile(tmp, 'matlab-discord-rpc-main', 'install.m'));
+    cleanup = onCleanup(@() removeFolder(tmp));
+    unzip(zipUrl, tmp);
+    inst = dir(fullfile(tmp, '*', 'install.m'));
+    if isempty(inst)
+        error('drpc:update', 'The download from %s has no install.m.', zipUrl);
+    end
+    run(fullfile(inst(1).folder, inst(1).name));
+    clear cleanup
+end
+
+function tag = latestRelease()
+    tag = '';
+    try
+        api = strrep(REPO(), 'https://github.com/', 'https://api.github.com/repos/');
+        r = webread([api '/releases/latest'], weboptions('Timeout', 15, 'ContentType', 'json'));
+        tag = char(r.tag_name);
+    catch
+    end
+end
+
+function tf = isNewer(a, b)
+    % true if version a is newer than version b ('1.10.0' > '1.9.2')
+    pa = str2double(regexp(char(a), '\d+', 'match'));
+    pb = str2double(regexp(char(b), '\d+', 'match'));
+    n = max(numel(pa), numel(pb));
+    pa(end + 1:n) = 0;
+    pb(end + 1:n) = 0;
+    k = find(pa ~= pb, 1);
+    tf = ~isempty(k) && pa(k) > pb(k);
+end
+
+function removeFolder(d)
+    try
+        rmdir(d, 's');
+    catch
+    end
 end
 
 function f = startupFile()
@@ -306,6 +411,18 @@ function dll = compileBridge(root)
     if st ~= 0 || ~isfile(dll)
         error('drpc:compile', 'Could not build the Discord bridge:\n%s', out);
     end
+    % bridges built from older sources; one still loaded in another MATLAB stays
+    old = dir(fullfile(bin, 'DrpcBridge_*.dll'));
+    ws = warning('off', 'all');
+    for k = 1:numel(old)
+        if ~strcmp(fullfile(bin, old(k).name), dll)
+            try
+                delete(fullfile(bin, old(k).name));
+            catch
+            end
+        end
+    end
+    warning(ws);
 end
 
 % =====================================================================
@@ -337,22 +454,36 @@ function c = defaultConfig()
     c.images = im;
 end
 
-function [c, stamp] = readConfig(root)
+function c = starterConfig()
+    % what a new config.json holds. client_id and images stay out, so they
+    % keep following the defaults unless you add them yourself.
+    c = rmfield(defaultConfig(), {'client_id', 'images'});
+end
+
+function [c, stamp, problem] = readConfig(root, current)
+    % current: the settings to keep when config.json can't be read. Falling
+    % back to the defaults would turn hidden names back on after a typo.
     f = fullfile(root, 'config.json');
     def = defaultConfig();
-    if ~isfile(f)
-        writeConfig(root, def);
+    if nargin < 2
+        current = def;
     end
-    d = dir(f);
-    stamp = d.datenum;
+    if ~isfile(f)
+        writeConfig(root, starterConfig());
+    end
+    stamp = fileStamp(f);
+    problem = '';
     c = def;
     try
         u = jsondecode(fileread(f));
     catch err
-        warning('drpc:config', 'config.json could not be read, using defaults: %s', err.message);
+        problem = err.message;
+        c = current;
         return
     end
-    if ~isstruct(u)
+    if ~isstruct(u) || ~isscalar(u)
+        problem = 'config.json must hold one JSON object: { ... }';
+        c = current;
         return
     end
     fn = fieldnames(u);
@@ -391,21 +522,76 @@ function [c, stamp] = readConfig(root)
 end
 
 function writeConfig(root, c)
-    fid = fopen(fullfile(root, 'config.json'), 'w', 'n', 'UTF-8');
-    fprintf(fid, '%s\n', jsonencode(c, 'PrettyPrint', true));
-    fclose(fid);
+    writeText(fullfile(root, 'config.json'), [jsonencode(c, 'PrettyPrint', true) newline]);
+end
+
+function setConfigValue(root, key, value)
+    % Change one key in config.json and leave the rest of the file as it is.
+    f = fullfile(root, 'config.json');
+    if ~isfile(f)
+        writeConfig(root, starterConfig());
+    end
+    txt = fileread(f);
+    try
+        u = jsondecode(txt);
+    catch err
+        error('drpc:config', 'config.json has an error. Fix it first (<a href="matlab:drpc config">drpc config</a>):\n%s', err.message);
+    end
+    if ~isstruct(u) || ~isscalar(u)
+        error('drpc:config', 'config.json must hold one JSON object: { ... }');
+    end
+    val = jsonencode(value);
+    pat = ['("' key '"\s*:\s*)(true|false|null|-?[\d.eE+-]+|"(?:[^"\\]|\\.)*")'];
+    if ~isempty(regexp(txt, pat, 'once'))
+        out = regexprep(txt, pat, ['$1' regexprep(val, '([$\\])', '\\$1')], 'once');
+    else
+        out = regexprep(txt, '^(\s*)\{', sprintf('$1{\n  "%s": %s,', key, val), 'once');
+    end
+    try
+        jsondecode(out);
+    catch
+        % e.g. the file was "{}": rewrite it instead of patching it
+        u.(key) = value;
+        out = [jsonencode(u, 'PrettyPrint', true) newline];
+    end
+    writeText(f, out);
+end
+
+function s = fileStamp(f)
+    % changes whenever the file is saved, even twice within one second
+    d = dir(f);
+    if isempty(d)
+        s = [];
+    else
+        s = [d.datenum d.bytes];
+    end
 end
 
 function S = refreshConfig(S)
-    d = dir(fullfile(S.root, 'config.json'));
-    if isempty(d) || d.datenum == S.cfgStamp
+    stamp = fileStamp(fullfile(S.root, 'config.json'));
+    if isempty(stamp) || isequal(stamp, S.cfgStamp)
         return
     end
     oldId = S.cfg.client_id;
-    [S.cfg, S.cfgStamp] = readConfig(S.root);
+    [S.cfg, S.cfgStamp, problem] = readConfig(S.root, S.cfg);
+    if ~isempty(problem) && ~strcmp(problem, S.cfgError)
+        fprintf(['Discord RPC: config.json has an error, so the previous settings stay on.\n' ...
+            '  %s\n  <a href="matlab:drpc config">Open config.json</a>\n'], problem);
+    elseif isempty(problem) && ~isempty(S.cfgError)
+        fprintf('Discord RPC: config.json is fixed and the new settings are on.\n');
+    end
+    S.cfgError = problem;
     if ~strcmp(oldId, S.cfg.client_id)
         Drpc.Bridge.Start(S.cfg.client_id);
     end
+end
+
+function openConfig()
+    f = fullfile(rootDir(), 'config.json');
+    if ~isfile(f)
+        writeConfig(rootDir(), starterConfig());
+    end
+    edit(f);
 end
 
 function c = toCellstr(x)
@@ -445,7 +631,12 @@ end
 function S = newState(root)
     S = struct();
     S.root = root;
-    [S.cfg, S.cfgStamp] = readConfig(root);
+    [S.cfg, S.cfgStamp, S.cfgError] = readConfig(root);
+    if ~isempty(S.cfgError)
+        % the file might be hiding names, so don't show them until it's fixed
+        S.cfg.show_names = false;
+        warning('drpc:config', 'config.json could not be read, so names stay hidden until it is fixed: %s', S.cfgError);
+    end
     S.session = double(Drpc.Bridge.ProcessStart());
     S.started = double(Drpc.Bridge.Now());
     S.paused = false;
@@ -1083,6 +1274,9 @@ function showStatus()
     end
     row('Settings', sprintf('<a href="matlab:drpc config">config.json</a>  (names %s, idle after %g min)', ...
         onOff(S.cfg.show_names), S.cfg.idle_minutes));
+    if ~isempty(S.cfgError)
+        row('', ['config.json has an error: ' S.cfgError]);
+    end
     if S.paused
         pr = '<a href="matlab:drpc resume">resume</a>';
     else
@@ -1093,7 +1287,7 @@ function showStatus()
     else
         nm = '<a href="matlab:drpc names on">show names</a>';
     end
-    fprintf('\n  %s   %s   <a href="matlab:drpc preview">preview</a>   <a href="matlab:drpc restart">restart</a>   <a href="matlab:drpc stop">stop</a>   <a href="matlab:web(''%s'', ''-browser'')">docs</a>\n\n', pr, nm, REPO());
+    fprintf('\n  %s   %s   <a href="matlab:drpc preview">preview</a>   <a href="matlab:drpc restart">restart</a>   <a href="matlab:drpc stop">stop</a>   <a href="matlab:drpc docs">docs</a>\n\n', pr, nm);
 end
 
 function row(label, text)
@@ -1126,6 +1320,9 @@ function preview()
     row('Bridge', sprintf('v%s, pid %d', char(Drpc.Bridge.BridgeVersion), Drpc.Bridge.Pid));
     if ~isempty(S.error)
         row('Last error', S.error);
+    end
+    if ~isempty(S.cfgError)
+        row('config.json', S.cfgError);
     end
     fprintf('\n');
 end

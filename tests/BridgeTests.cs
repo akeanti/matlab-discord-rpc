@@ -113,7 +113,10 @@ static class BridgeTests
         Bridge.Stop();
         Check("stop", Bridge.Status == "Stopped" && Bridge.Shown == "");
 
+        Wait(4.5);   // the last heartbeat is now older than the watchdog limit
         Bridge.Start(AppId);
+        Wait(1.0);
+        Check("restart does not replay the old run", !Bridge.WatchdogActive && Bridge.Shown == "" && !Bridge.Connected);
         Bridge.Push(Activity("Editing c.m", null), Busy);
         Wait(1.2);
         Check("starts again after stop", Bridge.Shown.Contains("c.m"));

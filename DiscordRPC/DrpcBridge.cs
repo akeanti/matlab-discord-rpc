@@ -21,7 +21,7 @@ namespace Drpc
 {
     public static class Bridge
     {
-        const string Version = "1.0.0";
+        const string Version = "1.1.0";
 
         // drpc.m puts this in timestamps.start of the busy payload; it is
         // replaced with the moment MATLAB stopped answering.
@@ -63,6 +63,13 @@ namespace Drpc
                 if (running) return;
                 running = true;
                 status = "Starting";
+                // Forget the last run. Its heartbeat is old, so the watchdog
+                // would otherwise replay its "Running" payload right away.
+                normal = null;
+                busy = null;
+                lastBeat = DateTime.MinValue;
+                watchdog = false;
+                shown = "";
                 int gen = ++generation;
                 worker = new Thread(delegate () { Loop(gen); });
                 worker.IsBackground = true;
@@ -314,7 +321,7 @@ namespace Drpc
 
             if (st.Conn == null && want != null && now >= st.NextConnect)
             {
-                st.Conn = Connect(id);
+                st.Conn = Connect(id, gen);
                 st.Current = null;
                 st.NextConnect = DateTime.UtcNow.AddSeconds(st.Conn == null ? 10 : 0);
             }
@@ -350,7 +357,12 @@ namespace Drpc
             return true;
         }
 
-        static Conn Connect(string id)
+        static bool IsCurrent(int gen)
+        {
+            lock (gate) return running && gen == generation;
+        }
+
+        static Conn Connect(string id, int gen)
         {
             if (!Regex.IsMatch(id ?? "", "^[0-9]{15,22}$"))
             {
@@ -361,6 +373,7 @@ namespace Drpc
             bool sawPipe = false;
             for (int i = 0; i < 10; i++)
             {
+                if (!IsCurrent(gen)) return null;     // drpc stop while connecting
                 Stream s = OpenPipe(i);
                 if (s == null) continue;
                 sawPipe = true;
@@ -393,13 +406,16 @@ namespace Drpc
         static Stream OpenPipe(int i)
         {
 #if DRPC_TCP_TEST
+            // same 150 ms budget as the pipe; Windows takes ~2 s to refuse a closed port
+            System.Net.Sockets.TcpClient tcp = new System.Net.Sockets.TcpClient();
             try
             {
-                System.Net.Sockets.TcpClient tcp = new System.Net.Sockets.TcpClient();
-                tcp.Connect("127.0.0.1", TestPort + i);
+                IAsyncResult r = tcp.BeginConnect("127.0.0.1", TestPort + i, null, null);
+                if (!r.AsyncWaitHandle.WaitOne(150)) { tcp.Close(); return null; }
+                tcp.EndConnect(r);
                 return tcp.GetStream();
             }
-            catch { return null; }
+            catch { tcp.Close(); return null; }
 #else
             NamedPipeClientStream p = null;
             try
