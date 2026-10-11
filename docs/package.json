@@ -1,0 +1,15 @@
+{
+  "name": "drpc-docs",
+  "private": true,
+  "type": "module",
+  "description": "The drpc website: https://akeanti.xyz/matlab-discord-rpc/",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "mermaid": "11.17.2",
+    "vitepress": "1.6.4"
+  }
+}

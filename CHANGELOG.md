@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.0
+
+- New website with the docs: https://akeanti.xyz/matlab-discord-rpc/ (`drpc docs` opens it)
+- drpc no longer starts itself in `-batch` jobs, parallel pool workers, MATLAB Engine sessions or `-nodesktop`. Before, every `parfor` worker could put its own status on Discord
+- Saving `config.json` with a JSON error keeps your previous settings and tells you what's wrong. Before, drpc silently fell back to the defaults, which turned hidden names back on. If MATLAB starts with a broken file, names stay hidden until it's fixed
+- `drpc names` changes only `show_names` in `config.json` and leaves the rest of the file as you wrote it
+- New `config.json` files leave out `client_id` and `images`, so those keep following the defaults
+- `drpc update` installs the newest release, and says so when you're already on it
+- `drpc restart` no longer flashes the previous run's "Running" status on Discord
+- `drpc stop` no longer waits for a connection attempt to finish
+- `drpc config` creates `config.json` if it's missing, and two saves within the same second are both picked up
+- Bridges built from older sources are removed from `bin/`
+- MATLAB unit tests, run in CI on R2021a and the latest release
+- `tests/run.ps1` runs the bridge tests on Windows with the built-in `csc.exe`, no WSL or mono needed
+
 ## 1.0.0
 
 First public release.

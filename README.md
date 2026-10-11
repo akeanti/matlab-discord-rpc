@@ -7,6 +7,8 @@
 Discord shows when you're gaming or listening to Spotify.<br>
 Six hours deep in MATLAB? Nothing. **drpc** fixes that.
 
+**[Website and docs](https://akeanti.xyz/matlab-discord-rpc/)** · [Getting started](https://akeanti.xyz/matlab-discord-rpc/getting-started) · [Configuration](https://akeanti.xyz/matlab-discord-rpc/configuration) · [Troubleshooting](https://akeanti.xyz/matlab-discord-rpc/troubleshooting)
+
 [![CI](https://github.com/akeanti/matlab-discord-rpc/actions/workflows/ci.yml/badge.svg)](https://github.com/akeanti/matlab-discord-rpc/actions/workflows/ci.yml)
 [![MATLAB](https://img.shields.io/badge/MATLAB-R2021a%2B-e16737)](#install)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4)](#install)
@@ -73,8 +75,9 @@ drpc resume       show it again
 drpc names off    say "Editing a function" instead of the file name
 drpc config       open the settings
 drpc preview      the exact payload plus diagnostics
-drpc update       install the latest version from GitHub
+drpc update       install the newest release from GitHub
 drpc uninstall    stop it and take it out of startup.m
+drpc docs         open the website
 ```
 
 What `drpc` prints:
@@ -82,7 +85,7 @@ What `drpc` prints:
 ```text
 >> drpc
 
-  Discord Rich Presence for MATLAB  v1.0.0
+  Discord Rich Presence for MATLAB  v1.1.0
 
   Discord       Connected as you
   Showing       Editing pid_controller.m
@@ -94,7 +97,7 @@ What `drpc` prints:
 
 ## Settings
 
-`drpc config` opens `config.json`. Changes apply as soon as you save.
+`drpc config` opens `config.json`. Changes apply as soon as you save, and a typo keeps your previous settings instead of resetting them.
 
 ```json
 {
@@ -106,7 +109,7 @@ What `drpc` prints:
 }
 ```
 
-Every option is in [docs/configuration.md](docs/configuration.md). Want your profile to say "Playing Simulink", or use your own icons? See [using your own Discord app](docs/own-discord-app.md).
+Every option is in [Configuration](https://akeanti.xyz/matlab-discord-rpc/configuration), and the ways to keep things private are in [Privacy](https://akeanti.xyz/matlab-discord-rpc/privacy). Want your profile to say "Playing Simulink", or use your own icons? See [using your own Discord app](https://akeanti.xyz/matlab-discord-rpc/own-discord-app).
 
 ## How it works
 
@@ -114,7 +117,7 @@ Every option is in [docs/configuration.md](docs/configuration.md). Want your pro
 MATLAB timer, every 2 s  ->  drpc.m  ->  C# bridge thread  ->  \\.\pipe\discord-ipc-0  ->  Discord
 ```
 
-Every two seconds `drpc.m` reads the Editor, the window in front, Simulink and the debugger, builds the activity, and hands it to the bridge. The bridge sends an update only when something changed, at most once every 5 seconds, which is what Discord allows. The full story, including the watchdog, is in [docs/how-it-works.md](docs/how-it-works.md).
+Every two seconds `drpc.m` reads the Editor, the window in front, Simulink and the debugger, builds the activity, and hands it to the bridge. The bridge sends an update only when something changed, at most once every 5 seconds, which is what Discord allows. The full story, including the watchdog, is in [How it works](https://akeanti.xyz/matlab-discord-rpc/how-it-works).
 
 ## FAQ
 
@@ -127,13 +130,16 @@ No. It only talks to the Discord app on your own PC, and the only text it sends 
 **Can I keep a project private?**
 Add the folder name to `hidden_folders`, or run `drpc names off`. To hide everything for a while, run `drpc pause`.
 
+**Will it start in my parfor workers or batch jobs?**
+No. drpc only starts itself when there's a MATLAB desktop, so `-batch` jobs, parallel workers and MATLAB Engine sessions are left alone.
+
 **MATLAB Online?**
 No. Rich Presence needs the Discord app on the same machine as MATLAB.
 
 **Which releases does it work on?**
 It's tested on R2024a, and anything from R2021a up should work. On R2025a and newer, telling the Editor apart from the Command Window relies on the old desktop, so that one detail may be off. [Let me know](https://github.com/akeanti/matlab-discord-rpc/issues) how it goes.
 
-Something not showing up? Check the [troubleshooting guide](docs/troubleshooting.md).
+Something not showing up? Check the [troubleshooting guide](https://akeanti.xyz/matlab-discord-rpc/troubleshooting). More answers are in the [FAQ](https://akeanti.xyz/matlab-discord-rpc/faq).
 
 ## Contributing
 
