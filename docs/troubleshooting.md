@@ -10,6 +10,10 @@ drpc talks to the **Discord desktop app**. Discord in a browser can't receive Ri
 
 In Discord: **User Settings > Activity Privacy > Share your detected activities with others** must be on.
 
+### "config.json has an error"
+
+The file isn't valid JSON, often because of a trailing comma or a missing quote. drpc keeps your previous settings and prints where the problem is. Fix it, save, and drpc confirms the new settings are on.
+
 ### "Discord said: ..."
 
 Discord rejected the last update. That is usually a broken image URL or button in `config.json`. Fix it and save; the next update clears the message.
@@ -24,7 +28,9 @@ drpc compiles its bridge with .NET Framework 4, which is part of Windows 10 and 
 
 ### It doesn't start with MATLAB
 
-Run `which -all startup`. MATLAB only runs the first `startup.m` on the path; drpc adds its block to the one in your MATLAB user folder (`userpath`). If another one comes first, copy the block between the `MATLAB Discord RPC` markers into it, or run `drpc setup` after fixing the path.
+drpc only starts itself when there's a MATLAB desktop, so `-batch`, `-nodesktop`, parallel workers and MATLAB Engine sessions are skipped on purpose. Run `drpc start` there if you want it.
+
+Otherwise, run `which -all startup`. MATLAB only runs the first `startup.m` on the path; drpc adds its block to the one in your MATLAB user folder (`userpath`). If another one comes first, copy the block between the `MATLAB Discord RPC` markers into it, or run `drpc setup` after fixing the path.
 
 ### "Running" shows when I'm not running anything
 
@@ -32,7 +38,7 @@ Something in MATLAB is using a lot of CPU (heavy 3D figures can). Raise `busy_cp
 
 ### Editing vs Command Window looks wrong
 
-drpc tells the two apart through the Java desktop. MATLAB R2025a and later use a new desktop where that isn't available, so drpc falls back to "Editing" whenever a file is open. Tested on R2024a; reports from newer releases are welcome.
+drpc tells the two apart through the Java desktop. MATLAB R2025a and later use a new desktop where that isn't available, so drpc falls back to "Editing" whenever a file is open. Tested on R2024a; [reports from newer releases](https://github.com/akeanti/matlab-discord-rpc/issues) are welcome.
 
 ### Icons are blank
 

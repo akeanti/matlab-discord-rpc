@@ -1,0 +1,225 @@
+/*
+ * drpc site theme.
+ * A MATLAB figure at night: navy-biased neutrals from the logo, MATLAB orange
+ * as the one accent, Discord's own colors only inside the Discord mockups.
+ * Archivo (expanded) for display, IBM Plex Sans for reading, Plex Mono for
+ * anything you would type into MATLAB.
+ */
+
+:root {
+  --drpc-font-display: 'Archivo', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --drpc-font-discord: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --vp-font-family-base: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --vp-font-family-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+
+  /* light: paper with a blue cast */
+  --vp-c-bg: #fbfbfd;
+  --vp-c-bg-alt: #f3f4f9;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-bg-soft: #eef0f6;
+  --vp-c-divider: #e2e5ef;
+  --vp-c-border: #d2d7e6;
+  --vp-c-gutter: #e2e5ef;
+  --vp-c-text-1: #12172a;
+  --vp-c-text-2: #474e6c;
+  --vp-c-text-3: #7a8099;
+
+  --vp-c-brand-1: #b84a07;
+  --vp-c-brand-2: #cf560b;
+  --vp-c-brand-3: #c24e08;
+  --vp-c-brand-soft: rgba(232, 101, 15, 0.13);
+
+  --vp-button-brand-bg: var(--vp-c-brand-3);
+  --vp-button-brand-hover-bg: #a94306;
+  --vp-button-brand-active-bg: #923a05;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-active-text: #ffffff;
+
+  --vp-c-tip-1: #3b4fd8;
+  --vp-c-tip-2: #4e60e6;
+  --vp-c-tip-3: #5865f2;
+  --vp-c-tip-soft: rgba(88, 101, 242, 0.12);
+
+  --vp-code-block-bg: #f1f3f9;
+  --vp-code-bg: rgba(18, 23, 42, 0.06);
+  --vp-code-color: #8f3a06;
+  --vp-c-default-soft: rgba(18, 23, 42, 0.06);
+
+  /* site accents */
+  --drpc-orange: #e2620e;
+  --drpc-orange-hot: #ff8a3d;
+  --drpc-grid: rgba(30, 40, 80, 0.07);
+  --drpc-grid-strong: rgba(30, 40, 80, 0.14);
+  --drpc-glow: rgba(255, 122, 26, 0.18);
+  --drpc-panel: #ffffff;
+  --drpc-panel-edge: #dfe3ee;
+  --drpc-cmd-bg: #ffffff;
+  --drpc-cmd-text: #1b2033;
+  --drpc-cmd-dim: #6d7390;
+  --drpc-cmd-link: #0b5bd3;
+  --drpc-cmd-prompt: #c24e08;
+
+  /* Discord, light theme */
+  --dc-popout: #ffffff;
+  --dc-card: #f2f3f5;
+  --dc-text: #060607;
+  --dc-text-2: #4e5058;
+  --dc-header: #313338;
+  --dc-green: #1a7f45;
+  --dc-blurple: #5865f2;
+  --dc-shadow: 0 1px 0 rgba(6, 6, 7, 0.04), 0 18px 50px -12px rgba(18, 23, 42, 0.28);
+}
+
+.dark {
+  /* dark: the logo's navy, nearly black */
+  --vp-c-bg: #0b0e18;
+  --vp-c-bg-alt: #080a12;
+  --vp-c-bg-elv: #131829;
+  --vp-c-bg-soft: #121727;
+  --vp-c-divider: #1f2640;
+  --vp-c-border: #2a3253;
+  --vp-c-gutter: #05070d;
+  --vp-c-text-1: #e8eaf3;
+  --vp-c-text-2: #a2a9c2;
+  --vp-c-text-3: #6b7394;
+
+  --vp-c-brand-1: #ff9d57;
+  --vp-c-brand-2: #ff8a3d;
+  --vp-c-brand-3: #f2711c;
+  --vp-c-brand-soft: rgba(255, 138, 61, 0.15);
+
+  --vp-button-brand-bg: #f2711c;
+  --vp-button-brand-hover-bg: #ff8a3d;
+  --vp-button-brand-active-bg: #ff9d57;
+  --vp-button-brand-text: #170b02;
+  --vp-button-brand-hover-text: #170b02;
+  --vp-button-brand-active-text: #170b02;
+
+  --vp-c-tip-1: #9ea6ff;
+  --vp-c-tip-2: #8790ff;
+  --vp-c-tip-3: #5865f2;
+  --vp-c-tip-soft: rgba(88, 101, 242, 0.16);
+
+  --vp-code-block-bg: #0f1322;
+  --vp-code-bg: rgba(255, 255, 255, 0.07);
+  --vp-code-color: #ffb27a;
+  --vp-c-default-soft: rgba(255, 255, 255, 0.07);
+
+  --drpc-orange: #ff8a3d;
+  --drpc-grid: rgba(150, 170, 255, 0.055);
+  --drpc-grid-strong: rgba(150, 170, 255, 0.11);
+  --drpc-glow: rgba(255, 122, 26, 0.22);
+  --drpc-panel: #10141f;
+  --drpc-panel-edge: #232a45;
+  --drpc-cmd-bg: #0d111c;
+  --drpc-cmd-text: #d9dcea;
+  --drpc-cmd-dim: #7d84a3;
+  --drpc-cmd-link: #7cb2ff;
+  --drpc-cmd-prompt: #ff9d57;
+
+  /* Discord, dark theme */
+  --dc-popout: #18191c;
+  --dc-card: #232428;
+  --dc-text: #f2f3f5;
+  --dc-text-2: #b5bac1;
+  --dc-header: #dbdee1;
+  --dc-green: #23a55a;
+  --dc-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 60px -16px rgba(0, 0, 0, 0.8);
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------- type */
+
+.VPNavBarTitle .title {
+  font-family: var(--drpc-font-display);
+  font-stretch: 118%;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3 {
+  font-family: var(--drpc-font-display);
+  text-wrap: balance;
+}
+.vp-doc h1 {
+  font-stretch: 112%;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+.vp-doc h2 {
+  font-stretch: 108%;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  border-top-color: var(--vp-c-divider);
+}
+.vp-doc h3 {
+  font-weight: 650;
+  font-stretch: 104%;
+}
+.vp-doc p,
+.vp-doc li {
+  line-height: 1.75;
+}
+.vp-doc a {
+  text-underline-offset: 3px;
+}
+.vp-doc table {
+  font-size: 14.5px;
+}
+.vp-doc th {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--vp-c-text-2);
+}
+.vp-doc :not(pre) > code {
+  font-size: 0.86em;
+}
+.vp-doc kbd {
+  font-family: var(--vp-font-family-mono);
+}
+
+/* MATLAB code blocks get a Command Window prompt feel */
+.vp-doc div[class*='language-'] {
+  border: 1px solid var(--vp-c-divider);
+}
+.vp-doc [class*='language-'] > span.lang {
+  font-family: var(--vp-font-family-mono);
+}
+
+/* sidebar */
+.VPSidebarItem.level-0 > .item > .text {
+  font-family: var(--vp-font-family-mono);
+  font-size: 11.5px !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-3) !important;
+}
+
+/* home: the nav floats over the hero plot */
+.VPHome {
+  padding-bottom: 0 !important;
+}
+.VPContent.is-home {
+  padding-top: 0;
+}
+
+::selection {
+  background: rgba(255, 138, 61, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

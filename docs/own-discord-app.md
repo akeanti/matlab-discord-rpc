@@ -11,7 +11,8 @@ drpc works out of the box with a shared Discord application, which is why your p
    ```
 5. Save. drpc reconnects with the new app within a few seconds.
 
-The application id is public by design. drpc never needs a client secret or a bot token, so don't put one anywhere.
+> [!IMPORTANT]
+> The application id is public by design. drpc never needs a client secret or a bot token, so don't put one anywhere.
 
 ## Icons
 
@@ -31,4 +32,4 @@ https://cdn.discordapp.com/emojis/EMOJI_ID.png?size=512&quality=lossless
 
 New art assets can take a few minutes to show up.
 
-The status icons in [`assets/icons`](../assets/icons) are free to use for either.
+The status icons in [`assets/icons`](https://github.com/akeanti/matlab-discord-rpc/tree/main/assets/icons) are free to use for either.

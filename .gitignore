@@ -14,3 +14,8 @@ slprj/
 .idea/
 Thumbs.db
 .DS_Store
+
+# docs site
+docs/node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/

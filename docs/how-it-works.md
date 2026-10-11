@@ -35,6 +35,7 @@ MATLAB timers run on MATLAB's main thread. Talking to Discord there would mean M
 - sends an update only when something changed, at most one every 5 s (Discord allows 5 per 20 s), and the newest change always wins
 - reads Discord's replies, so a rejected payload shows up in `drpc` instead of failing silently
 - reconnects every 10 s if Discord closes or restarts
+- forgets the previous run on `drpc restart`, so an old "Running" never flashes up
 - clears your status on `drpc stop`, `drpc pause` and when MATLAB exits
 
 `DrpcBridge.cs` is plain C# 5, compiled the first time you start drpc with the `csc.exe` that is part of .NET Framework 4 on every Windows 10 and 11 install. The DLL goes to `DiscordRPC/bin/` and is named after a hash of the source, so editing the source builds a fresh one. The repo contains no binaries; what runs is what you can read.
@@ -61,3 +62,9 @@ DiscordRPC/
 ```
 
 `drpc setup` adds a marked block to `startup.m` in your MATLAB user folder; `drpc uninstall` removes exactly that block.
+
+`startup.m` runs in every MATLAB session, including ones nobody is looking at. `drpc autostart` skips `-batch` jobs and parallel pool workers right away, then waits a few seconds and checks for a desktop (`usejava('desktop')`, or `desktop('-inuse')` for the new desktop). No desktop, no Discord status.
+
+## Settings
+
+`config.json` is read again whenever its timestamp or size changes, so a save shows up on the next tick. If the new file isn't valid JSON, the previous settings stay in effect. A typo can't turn hidden names back on.
