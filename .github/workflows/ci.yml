@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bridge-tests:
+    name: Bridge tests (fake Discord)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q mono-mcs mono-runtime
+      - name: Run tests
+        run: bash tests/run.sh
+
+  windows-compile:
+    name: Compile with the csc.exe that ships with Windows
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build DrpcBridge.cs like drpc.m does
+        shell: pwsh
+        run: |
+          $csc = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+          & $csc /nologo /target:library /optimize+ /r:System.Core.dll /out:DrpcBridge.dll DiscordRPC\DrpcBridge.cs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Item DrpcBridge.dll | Select-Object Name, Length
