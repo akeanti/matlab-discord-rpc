@@ -1085,8 +1085,9 @@ function [mode, name] = classifyTitle(kind, title)
         mode = 'app';
         idx = strfind(title, ' - ');
         if ~isempty(idx)
-            [~, n, e] = fileparts(strtrim(strrep(title(idx(1) + 3:end), '*', '')));
-            name = [n e];
+            % the title holds a Windows path; split on \ and / whatever the OS
+            file = strtrim(strrep(title(idx(1) + 3:end), '*', ''));
+            name = regexp(file, '[^\\/]+$', 'match', 'once');
         end
         return
     end

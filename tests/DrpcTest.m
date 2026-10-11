@@ -52,6 +52,8 @@ classdef DrpcTest < matlab.unittest.TestCase
         function appDesignerTitles(tc)
             [m, n] = DrpcTest.call('classifyTitle', 'matlabwindow', 'App Designer - C:\apps\scope_ui.mlapp*');
             tc.verifyEqual({m, n}, {'app', 'scope_ui.mlapp'});
+            [~, n] = DrpcTest.call('classifyTitle', 'matlabwindow', 'App Designer - /home/ada/scope_ui.mlapp');
+            tc.verifyEqual(n, 'scope_ui.mlapp', 'forward slashes too');
             [m, n] = DrpcTest.call('classifyTitle', 'matlabwindow', 'App Designer');
             tc.verifyEqual({m, n}, {'app', ''});
         end
