@@ -48,5 +48,6 @@ function drpcInstall(here)
 
     drpc setup
     drpc start
-    fprintf('\nInstalled in %s\nType <a href="matlab:drpc">drpc</a> to see what Discord shows.\n\n', dest);
+    fprintf(['\nInstalled in %s\nType <a href="matlab:drpc">drpc</a> to see what Discord shows, ' ...
+        'or <a href="matlab:drpc docs">drpc docs</a> for the docs.\n\n'], dest);
 end
