@@ -128,7 +128,7 @@ Not yet. On those systems Discord listens on a Unix socket instead of a named pi
 No. It only talks to the Discord app on your own PC, and the only text it sends is what you see on your profile. See [SECURITY.md](SECURITY.md).
 
 **Can I keep a project private?**
-Add the folder name to `hidden_folders`, or run `drpc names off`. To hide everything for a while, run `drpc pause`.
+Add the folder name to `hidden_folders`, which also covers Simulink models and App Designer apps saved there, or run `drpc names off`. To hide everything for a while, run `drpc pause`.
 
 **Will it start in my parfor workers or batch jobs?**
 No. drpc only starts itself when there's a MATLAB desktop, so `-batch` jobs, parallel workers and MATLAB Engine sessions are left alone.
