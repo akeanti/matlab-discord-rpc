@@ -82,7 +82,7 @@ Want file names hidden, or a project kept private? See [Privacy](./privacy). Eve
 drpc update
 ```
 
-drpc asks GitHub for the newest release. If it's newer than yours, it downloads and installs it. Your `config.json` is kept.
+drpc asks GitHub for the newest release. If it's newer than yours, it links the release notes, then downloads and installs it. Your `config.json` is kept.
 
 If the update changed the bridge, `drpc` will tell you to restart MATLAB. Until you do, the old bridge keeps working.
 

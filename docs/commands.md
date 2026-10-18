@@ -81,7 +81,7 @@ Paste this when you [open an issue](https://github.com/akeanti/matlab-discord-rp
 
 Asks GitHub for the newest release and compares it with yours. If yours is current, it says so and stops. Otherwise it downloads that release and runs its installer, which keeps your `config.json`.
 
-If GitHub's release list can't be reached, it installs the latest code from the `main` branch instead.
+When an update is found it links the release notes. If GitHub's API limit is used up, which happens fast on shared campus networks, it reads the newest release from the releases page instead. Only if neither can be reached does it install the latest code from the `main` branch.
 
 ## drpc setup and drpc uninstall
 
