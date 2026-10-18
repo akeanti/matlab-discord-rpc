@@ -26,7 +26,7 @@ Everything goes through one function, `drpc`. Type a command in the Command Wind
 ```text
 >> drpc
 
-  Discord Rich Presence for MATLAB  v1.1.0
+  Discord Rich Presence for MATLAB  v1.2.0
 
   Discord       Connected as you
   Showing       Editing pid_controller.m
@@ -72,7 +72,7 @@ Diagnostics
   Debugging     off
   MATLAB CPU    3% of one core
   Idle          2 s
-  Bridge        v1.1.0, pid 13368
+  Bridge        v1.2.0, pid 13368
 ```
 
 Paste this when you [open an issue](https://github.com/akeanti/matlab-discord-rpc/issues/new/choose). Remove anything you don't want public first.

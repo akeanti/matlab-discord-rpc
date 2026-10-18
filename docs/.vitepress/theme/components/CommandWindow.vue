@@ -38,7 +38,7 @@ function toggleNames() {
 {{ last.msg }}
 </template><span class="p">&gt;&gt;</span> drpc
 
-  <b>Discord Rich Presence</b> for MATLAB  v1.1.0
+  <b>Discord Rich Presence</b> for MATLAB  v1.2.0
 
   <span class="k">Discord      </span> {{ paused ? 'Paused' : 'Connected as Ada' }}
 <template v-if="showing">  <span class="k">Showing      </span> {{ showing[0] }}

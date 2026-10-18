@@ -21,7 +21,7 @@ namespace Drpc
 {
     public static class Bridge
     {
-        const string Version = "1.1.0";
+        const string Version = "1.2.0";
 
         // drpc.m puts this in timestamps.start of the busy payload; it is
         // replaced with the moment MATLAB stopped answering.

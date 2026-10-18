@@ -56,6 +56,10 @@ classdef DrpcTest < matlab.unittest.TestCase
             tc.verifyEqual(n, 'scope_ui.mlapp', 'forward slashes too');
             [m, n] = DrpcTest.call('classifyTitle', 'matlabwindow', 'App Designer');
             tc.verifyEqual({m, n}, {'app', ''});
+            [~, ~, d] = DrpcTest.call('classifyTitle', 'matlabwindow', 'App Designer - C:\Exam\scope_ui.mlapp');
+            tc.verifyEqual(d, 'C:\Exam', 'the folder, so hidden_folders can hide the app');
+            [~, ~, d] = DrpcTest.call('classifyTitle', 'matlab', 'Figure 1');
+            tc.verifyEmpty(d);
         end
 
         function figureTitles(tc)
@@ -80,6 +84,9 @@ classdef DrpcTest < matlab.unittest.TestCase
             tc.verifyEqual(k('.m', sprintf('  classdef Foo < handle\n')), 'Class');
             tc.verifyEqual(k('.m', sprintf('x = 1;\nfunction y = f(x)\n')), 'Script', ...
                 'a script with local functions is still a script');
+            tc.verifyEqual(k('.m', sprintf('%%{\r\nCopyright 2026\r\nx = 1\r\n%%}\r\nfunction y = f(x)\r\n')), 'Function', ...
+                'a block comment above the function line');
+            tc.verifyEqual(k('.m', sprintf('%%{\nnotes\n%%}\nx = 1;\n')), 'Script');
             tc.verifyEqual(k('.m', ''), 'Script');
             tc.verifyEqual(k('.mlx', ''), 'Live Script');
             tc.verifyEqual(k('.cpp', ''), 'C/C++ file');
@@ -113,11 +120,15 @@ classdef DrpcTest < matlab.unittest.TestCase
             s = DrpcTest.call('clip', repmat('x', 1, 300));
             tc.verifyLength(s, 128);
             tc.verifyEqual(s(end), char(8230));
+            emoji = char([55357 56832]);
+            s = DrpcTest.call('clip', [repmat('x', 1, 126) emoji repmat('y', 1, 10)]);
+            tc.verifyEqual(s, [repmat('x', 1, 126) char(8230)], 'an emoji is never cut in half');
         end
 
         function buttonsAreChecked(tc)
             raw = {struct('label', 'GitHub', 'url', 'https://github.com/x'), ...
                 struct('label', 'Bad', 'url', 'ftp://x'), ...
+                struct('label', 'Long', 'url', ['https://a.b/' repmat('x', 1, 520)]), ...
                 struct('label', repmat('L', 1, 40), 'url', 'https://a.b'), ...
                 struct('label', 'Third', 'url', 'https://c.d')};
             b = DrpcTest.call('buttonList', raw);
@@ -267,6 +278,13 @@ classdef DrpcTest < matlab.unittest.TestCase
             tc.verifyFalse(newer('1.0.0', '1.0.0'));
             tc.verifyFalse(newer('1.0', '1.0.0'));
             tc.verifyFalse(newer('0.9.0', '1.0.0'));
+        end
+
+        function tagFromReleasePage(tc)
+            tag = @(u) DrpcTest.call('tagFromUrl', u);
+            tc.verifyEqual(tag('https://github.com/akeanti/matlab-discord-rpc/releases/tag/v1.2.0'), 'v1.2.0');
+            tc.verifyEqual(tag('https://github.com/akeanti/matlab-discord-rpc/releases/tag/v1.2.0?x=1'), 'v1.2.0');
+            tc.verifyEqual(tag('https://github.com/akeanti/matlab-discord-rpc/releases'), '', 'no release yet');
         end
 
         function noAutoStartInBatch(tc)
