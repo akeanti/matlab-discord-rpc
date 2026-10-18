@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0
+
+- `hidden_folders` now also hides the Simulink model and the App Designer app you're working on when its file is in a hidden folder. Before, only the current folder and the Editor file were checked, so a model opened from `Exam\` still showed its name if the current folder was somewhere else
+- Functions and classes that start with a `%{ ... %}` block comment show as "Function" and "Class" instead of "Script"
+- A button URL over 512 characters is skipped. Before, Discord rejected the whole status and nothing showed
+- Long names are never cut in the middle of an emoji
+- `drpc update` still finds the newest release when GitHub's API limit is used up, which happens fast on campus networks. Before, it installed the unreleased code from `main` instead. It also links the release notes
+
 ## 1.1.0
 
 - New website with the docs: https://akeanti.xyz/matlab-discord-rpc/ (`drpc docs` opens it)

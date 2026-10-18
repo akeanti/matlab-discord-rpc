@@ -21,7 +21,7 @@ A new `config.json` holds the settings you're most likely to change. `client_id`
 | `show_names` | `true` | `false` shows "Editing a function" instead of the file name. Same as `drpc names off` |
 | `show_line` | `true` | Cursor line, e.g. "Line 42 of 142" |
 | `show_folder` | `true` | Current folder name in the Command Window state and hover text |
-| `hidden_folders` | `[]` | If the current folder or the open file's path contains any of these, names and folder are hidden |
+| `hidden_folders` | `[]` | If the path of the current folder, the open file, the Simulink model or the App Designer app contains any of these, names and folder are hidden |
 | `idle_minutes` | `10` | Minutes without keyboard or mouse input before "Away from keyboard". `0` turns it off |
 | `detect_running` | `true` | Show "Running ..." while code runs |
 | `busy_cpu_percent` | `60` | MATLAB CPU use (percent of one core) that counts as running while MATLAB still answers |
@@ -51,7 +51,7 @@ Matching ignores case and works on any part of the path. More ways to stay priva
 ]
 ```
 
-Labels are cut to 32 characters and URLs must start with `http://` or `https://`. Discord doesn't show your own buttons to you, so ask a friend to check.
+Labels are cut to 32 characters. URLs must start with `http://` or `https://` and be at most 512 characters. Discord doesn't show your own buttons to you, so ask a friend to check.
 
 ### Member list
 

@@ -73,7 +73,7 @@ export default defineConfig({
       { text: 'How it works', link: '/how-it-works' },
       { text: 'Help', link: '/troubleshooting', activeMatch: '^/(troubleshooting|faq)' },
       {
-        text: 'v1.1.0',
+        text: 'v1.2.0',
         items: [
           { text: 'Changelog', link: `${repo}/blob/main/CHANGELOG.md` },
           { text: 'Releases', link: `${repo}/releases` },

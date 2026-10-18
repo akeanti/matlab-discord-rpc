@@ -79,7 +79,7 @@ end
 % lifecycle
 
 function v = VERSION()
-    v = '1.1.0';
+    v = '1.2.0';
 end
 
 function u = REPO()
@@ -299,6 +299,7 @@ function updateRpc()
             return
         end
         fprintf('Updating drpc %s to %s...\n', VERSION(), latest);
+        fprintf('What''s new: <a href="%s/releases/tag/%s">release notes</a>\n', REPO(), tag);
         zipUrl = sprintf('%s/archive/refs/tags/%s.zip', REPO(), tag);
     end
     tmp = tempname;
@@ -319,7 +320,26 @@ function tag = latestRelease()
         api = strrep(REPO(), 'https://github.com/', 'https://api.github.com/repos/');
         r = webread([api '/releases/latest'], weboptions('Timeout', 15, 'ContentType', 'json'));
         tag = char(r.tag_name);
+        return
     catch
+    end
+    % The API allows 60 requests an hour per address, which a campus network
+    % uses up fast. The releases page redirects to the newest tag without it.
+    try
+        req = matlab.net.http.RequestMessage('HEAD');
+        [~, ~, hist] = req.send([REPO() '/releases/latest'], matlab.net.http.HTTPOptions('ConnectTimeout', 15));
+        tag = tagFromUrl(char(hist(end).URI));
+    catch
+    end
+end
+
+function tag = tagFromUrl(u)
+    % 'https://github.com/o/r/releases/tag/v1.2.0' -> 'v1.2.0'
+    tag = regexp(char(u), '/releases/tag/([^/?#]+)', 'tokens', 'once');
+    if isempty(tag)
+        tag = '';
+    else
+        tag = tag{1};
     end
 end
 
@@ -616,7 +636,8 @@ function b = buttonList(raw)
     for k = 1:numel(raw)
         x = raw{k};
         if isstruct(x) && isfield(x, 'label') && isfield(x, 'url') && ischar(x.label) ...
-                && ischar(x.url) && numel(x.label) >= 1 && startsWith(x.url, {'http://', 'https://'})
+                && ischar(x.url) && numel(x.label) >= 1 && numel(x.url) <= 512 ...
+                && startsWith(x.url, {'http://', 'https://'})
             b{end + 1} = struct('label', x.label(1:min(end, 32)), 'url', x.url); %#ok<AGROW>
             if numel(b) == 2
                 break
@@ -655,6 +676,7 @@ function S = newState(root)
     S.fgTitle = '';
     S.fgMode = 'main';
     S.fgName = '';
+    S.fgDir = '';
     S.blocks = struct('model', '', 'count', 0, 'at', 0);
     S.debug = struct('active', false, 'file', '', 'dir', '', 'line', 0);
     S.last = struct();
@@ -727,7 +749,17 @@ function [S, act, busyAct] = buildActivity(S)
 
     cwd = pwd;
     [~, folder] = fileparts(cwd);
-    hidden = isHidden(c.hidden_folders, {cwd, ed.dir, S.debug.dir});
+    where = {cwd, ed.dir, S.debug.dir};
+    if ~isempty(sl.running)
+        where{end + 1} = modelDir(sl.running);
+    end
+    switch S.fgMode
+        case 'simulink'
+            where{end + 1} = modelDir(pick(true, S.fgName, sl.model));
+        case 'app'
+            where{end + 1} = S.fgDir;
+    end
+    hidden = isHidden(c.hidden_folders, where);
     names = c.show_names && ~hidden;
     showFolder = c.show_folder && ~hidden;
     label = fileLabel(ed, names);
@@ -1005,6 +1037,8 @@ function k = fileKind(ext, txt)
             k = 'Live Script';
         case {'.m', ''}
             k = 'Script';
+            % a %{ ... %} block above the function line is still a comment
+            txt = regexprep(txt, '^[ \t]*%\{[ \t]*\r?$.*?^[ \t]*%\}[ \t]*\r?$', '', 'lineanchors');
             first = regexp(txt, '^[ \t]*[^%\s][^\r\n]*', 'match', 'once', 'lineanchors');
             if ~isempty(regexp(first, '^\s*function\>', 'once'))
                 k = 'Function';
@@ -1068,12 +1102,14 @@ function S = updateForeground(S)
         return      % another app has focus: keep the last MATLAB view
     end
     S.fgTitle = strtrim(raw(tab + 1:end));
-    [S.fgMode, S.fgName] = classifyTitle(S.fgKind, S.fgTitle);
+    [S.fgMode, S.fgName, S.fgDir] = classifyTitle(S.fgKind, S.fgTitle);
 end
 
-function [mode, name] = classifyTitle(kind, title)
+function [mode, name, folder] = classifyTitle(kind, title)
+    % folder: where the shown file lives, when the title says (App Designer)
     mode = 'main';
     name = '';
+    folder = '';
     tok = regexp(title, '^(.*?)\s+-\s+(Simulink|Stateflow)', 'tokens', 'once');
     if ~isempty(tok)
         mode = 'simulink';
@@ -1088,6 +1124,7 @@ function [mode, name] = classifyTitle(kind, title)
             % the title holds a Windows path; split on \ and / whatever the OS
             file = strtrim(strrep(title(idx(1) + 3:end), '*', ''));
             name = regexp(file, '[^\\/]+$', 'match', 'once');
+            folder = regexp(file, '^.*(?=[\\/][^\\/]+$)', 'match', 'once');
         end
         return
     end
@@ -1172,6 +1209,17 @@ function [n, S] = blockCount(S, mdl, t)
     S.blocks = struct('model', mdl, 'count', n, 'at', t);
 end
 
+function d = modelDir(mdl)
+    % folder of a loaded model's .slx, for hidden_folders
+    d = '';
+    try
+        if ~isempty(mdl) && exist('is_simulink_loaded', 'file') && is_simulink_loaded() && bdIsLoaded(mdl)
+            d = fileparts(get_param(mdl, 'FileName'));
+        end
+    catch
+    end
+end
+
 function d = debugInfo()
     d = struct('active', false, 'file', '', 'dir', '', 'line', 0);
     try
@@ -1238,7 +1286,11 @@ function s = clip(s)
     if numel(s) < 2
         s = '';
     elseif numel(s) > 128
-        s = [s(1:127) char(8230)];
+        n = 127;
+        if s(n) >= 55296 && s(n) <= 56319
+            n = n - 1;      % don't cut an emoji in half
+        end
+        s = [s(1:n) char(8230)];
     end
 end
 

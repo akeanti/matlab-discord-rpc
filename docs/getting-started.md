@@ -43,7 +43,7 @@ Type `drpc`:
 ```text
 >> drpc
 
-  Discord Rich Presence for MATLAB  v1.1.0
+  Discord Rich Presence for MATLAB  v1.2.0
 
   Discord       Connected as you
   Showing       Editing pid_controller.m

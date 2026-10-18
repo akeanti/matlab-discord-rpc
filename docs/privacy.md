@@ -34,7 +34,7 @@ Add any part of its path to `hidden_folders` in `config.json` (`drpc config` ope
 "hidden_folders": ["Internship", "Exam"]
 ```
 
-Whenever the current folder or the file you're editing has one of these in its path, names and the folder are hidden. Matching ignores case and works on any part of the path, so `"Exam"` also matches `Exams` and `Example`.
+Whenever the current folder, the file you're editing, the Simulink model or the App Designer app you're in has one of these in its path, names and the folder are hidden. Matching ignores case and works on any part of the path, so `"Exam"` also matches `Exams` and `Example`.
 
 ## Hide the folder name
 
